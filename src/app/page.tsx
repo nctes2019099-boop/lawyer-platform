@@ -53,7 +53,7 @@ function ScreenLoader() {
 }
 
 export default function Home() {
-  const { currentScreen, darkMode, setDarkMode } = useAppStore();
+  const { currentScreen, darkMode, setDarkMode, navigate } = useAppStore();
   const [user, setUser] = useState<{
     id: string;
     name: string;
@@ -73,11 +73,12 @@ export default function Home() {
         if (data && data.id) {
           setUser(data);
           (window as unknown as { __USER_ID__?: string }).__USER_ID__ = data.id;
+          navigate("dashboard");
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [setDarkMode]);
+  }, [setDarkMode, navigate]);
 
   useEffect(() => {
     if (darkMode) document.documentElement.classList.add("dark");
@@ -92,7 +93,7 @@ export default function Home() {
     try {
       switch (currentScreen) {
         case "login":
-          return <LoginScreen onLogin={setUser} />;
+          return <LoginScreen onLogin={(u) => { setUser(u); navigate("dashboard"); }} />;
         case "dashboard":
           return <DashboardScreen />;
         case "cases":
