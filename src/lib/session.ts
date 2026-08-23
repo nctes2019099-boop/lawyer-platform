@@ -27,6 +27,14 @@ export async function verifySession() {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
 
+  // Auto-login for development mode (no token needed)
+  if (env.DEV_AUTO_LOGIN) {
+    const user = await prisma.user.findFirst({
+      where: { email: "demo@lawyer.com" },
+    });
+    if (user) return { userId: user.id, user };
+  }
+
   if (!token) {
     const headerUserId = (await cookies()).get("x-user-id")?.value;
     if (headerUserId) {
@@ -43,12 +51,6 @@ export async function verifySession() {
     if (!user) return null;
     return { userId, user };
   } catch {
-    if (env.DEV_AUTO_LOGIN) {
-      const user = await prisma.user.findFirst({
-        where: { email: "demo@lawyer.com" },
-      });
-      if (user) return { userId: user.id, user };
-    }
     return null;
   }
 }
