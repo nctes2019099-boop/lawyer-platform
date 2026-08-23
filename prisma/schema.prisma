@@ -32,6 +32,8 @@ model User {
   payments      Payment[]
   transactions  Transaction[]
   auditLogs     AuditLog[]
+  tasks         Task[]
+  timeEntries   TimeEntry[]
 }
 
 model Case {
@@ -53,6 +55,8 @@ model Case {
   petitions     Petition[]
   appointments  Appointment[]
   transactions  Transaction[]
+  tasks         Task[]
+  timeEntries   TimeEntry[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -276,4 +280,44 @@ model Transaction {
   @@index([ownerId])
   @@index([type])
   @@index([date])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("pending")
+  priority    String    @default("عادية")
+  dueDate     DateTime?
+  completedAt DateTime?
+  caseId      String?
+  case        Case?     @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([caseId])
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int      @default(0)
+  billable    Boolean  @default(true)
+  hourlyRate  Float    @default(0)
+  caseId      String?
+  case        Case?    @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([caseId])
+  @@index([startTime])
 }

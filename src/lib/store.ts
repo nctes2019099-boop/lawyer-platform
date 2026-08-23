@@ -16,6 +16,7 @@ export type ScreenName =
   | "documents"
   | "subscriptions"
   | "transactions"
+  | "tasks"
   | "admin"
   | "login";
 

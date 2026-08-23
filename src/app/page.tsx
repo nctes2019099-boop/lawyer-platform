@@ -25,6 +25,7 @@ import { DocumentsScreen } from "@/components/screens/documents-screen";
 import { SubscriptionScreen } from "@/components/screens/subscription-screen";
 import { TransactionsScreen } from "@/components/screens/transactions-screen";
 import { AdminScreen } from "@/components/screens/admin-screen";
+import { TasksScreen } from "@/components/screens/tasks-screen";
 
 function ErrorFallback({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -124,6 +125,8 @@ export default function Home() {
           return <SubscriptionScreen />;
         case "transactions":
           return <TransactionsScreen />;
+        case "tasks":
+          return <TasksScreen />;
         case "admin":
           return <AdminScreen />;
         default:

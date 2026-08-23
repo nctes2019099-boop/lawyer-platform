@@ -6,7 +6,7 @@ import { useAppStore } from "@/lib/store";
 import {
   X, LayoutDashboard, Briefcase, Users, BookOpen, ScrollText,
   FileText, CalendarDays, BarChart3, Wallet, Settings,
-  Shield, LogOut, Crown, Scale,
+  Shield, LogOut, Crown, Scale, CheckSquare,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ const mainMenu = [
   { key: "documents" as const, label: "المستندات", icon: FileText },
   { key: "analytics" as const, label: "التحليلات", icon: BarChart3 },
   { key: "transactions" as const, label: "المالية", icon: Wallet },
+  { key: "tasks" as const, label: "المهام", icon: CheckSquare },
 ];
 
 const secondaryMenu = [

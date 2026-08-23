@@ -268,6 +268,15 @@ async function main() {
   });
 
   console.log("✅ Audit logs:", 6);
+  await prisma.task.createMany({
+    data: [
+      { title: "مراجعة عقد البيع", description: "مراجعة بنود العقد قبل التوقيع", status: "pending", priority: "عاجلة", dueDate: new Date(Date.now() + 86400000), ownerId: demoUser.id },
+      { title: "تحضير مذكرة دفاع", description: "إعداد المذكرة للجلسة القادمة", status: "pending", priority: "حرجة", dueDate: new Date(Date.now() + 172800000), ownerId: demoUser.id },
+      { title: "متابعة إجراءات التسجيل", status: "completed", priority: "عادية", completedAt: new Date(), ownerId: demoUser.id },
+      { title: "التواصل مع الموكل", description: "تحديث الموكل بآخر التطورات", status: "pending", priority: "عادية", dueDate: new Date(Date.now() + 259200000), ownerId: demoUser.id },
+    ],
+  });
+  console.log("✅ Tasks: 4");
 
   console.log("\n🎉 Seed completed!");
   console.log("📊 Summary: 3 users, 14 clients, 15 cases, 15 sessions, 12 appointments, 8 notes, 10 laws, 7 petitions, 20 activities, 12 notifications, 4 plans, 18 transactions, 6 audit logs");
