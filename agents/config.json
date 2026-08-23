@@ -1,0 +1,206 @@
+{
+  "version": "2.2.0",
+  "targetScore": 10,
+  "agents": [
+    {
+      "id": "design",
+      "name": "Design Agent",
+      "description": "تحسين التصميم البصري والتفاعلي والحركات",
+      "currentScore": 9.5,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "تأثيرات micro-interactions متقدمة",
+        "تدرجات ألوان ديناميكية",
+        "animations على كل interaction",
+        "skeleton loading states",
+        "pull-to-refresh gesture",
+        "haptic feedback simulation",
+        "3D transforms للبطاقات",
+        "cursor effects",
+        "page transitions",
+        "loading states مبتكرة"
+      ]
+    },
+    {
+      "id": "code",
+      "name": "Code Quality Agent",
+      "description": "تحسين جودة الكود وTypeScript والهيكلية",
+      "currentScore": 8.5,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "Zero TypeScript errors",
+        "Zero ESLint warnings",
+        "Custom hooks للمنطق المشترك",
+        "Error boundaries",
+        "Loading states في كل component",
+        "Memoization للأداء",
+        "Code splitting",
+        "Strict TypeScript mode",
+        "JSDoc documentation",
+        "Consistent naming conventions"
+      ]
+    },
+    {
+      "id": "perf",
+      "name": "Performance Agent",
+      "description": "تحسين الأداء والسرعة وحجم الباقة",
+      "currentScore": 8.0,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "Lazy loading للشاشات",
+        "Image optimization",
+        "Bundle analysis",
+        "Service Worker للـ offline",
+        "Cache strategies",
+        "Prefetching",
+        "Virtual scrolling للقوائم الطويلة",
+        "Debounce/throttle للبحث",
+        "Web Workers للمعالجة الثقيلة",
+        "Core Web Vitals optimization"
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security Agent",
+      "description": "تحسين الأمان والحماية",
+      "currentScore": 8.0,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "Input validation على كل API",
+        "Rate limiting",
+        "CSRF protection",
+        "Security headers (CSP, HSTS)",
+        "Password strength validation",
+        "Session timeout handling",
+        "SQL injection prevention",
+        "XSS prevention",
+        "Audit logging",
+        "Data encryption at rest"
+      ]
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile/PWA Agent",
+      "description": "تحسين تجربة الموبايل والـ PWA",
+      "currentScore": 9.0,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "Offline mode كامل",
+        "Push notifications",
+        "Add to Home Screen",
+        "Splash screen",
+        "Touch gestures (swipe, pinch)",
+        "Viewport optimization",
+        "Safe area insets",
+        "Biometric auth simulation",
+        "Deep linking",
+        "App shell architecture"
+      ]
+    },
+    {
+      "id": "db",
+      "name": "Database Agent",
+      "description": "تحسين قاعدة البيانات والاستعلامات",
+      "currentScore": 8.5,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "Database indexes",
+        "Query optimization",
+        "Connection pooling",
+        "Migration system",
+        "Backup strategy",
+        "Data validation at DB level",
+        "Soft deletes",
+        "Audit trails",
+        "Full-text search",
+        "Data archiving"
+      ]
+    },
+    {
+      "id": "api",
+      "name": "API Agent",
+      "description": "تحسين نقاط النهاية والتوثيق",
+      "currentScore": 8.5,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "Consistent error responses",
+        "Request validation (Zod)",
+        "API versioning",
+        "OpenAPI/Swagger docs",
+        "Pagination on all list endpoints",
+        "Caching headers",
+        "Request logging",
+        "API rate limiting per user",
+        "Webhook security",
+        "Health check endpoint"
+      ]
+    },
+    {
+      "id": "test",
+      "name": "Testing Agent",
+      "description": "إضافة اختبارات شاملة",
+      "currentScore": 5.0,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "Unit tests for utilities",
+        "Component tests (React Testing Library)",
+        "API integration tests",
+        "E2E tests (Playwright)",
+        "Performance benchmarks",
+        "Accessibility tests",
+        "Security tests",
+        "Coverage > 80%",
+        "CI/CD pipeline",
+        "Visual regression tests"
+      ]
+    },
+    {
+      "id": "i18n",
+      "name": "i18n Agent",
+      "description": "تحسين التعريب والترجمة",
+      "currentScore": 8.0,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "100% Arabic text (no hardcoded strings)",
+        "RTL perfection",
+        "Date/number formatting (ar-IQ)",
+        "Arabic typography",
+        "Right-to-left animations",
+        "Hijri calendar support",
+        "Arabic search (normalization)",
+        "Bidi text handling",
+        "Font loading optimization",
+        "Locale-aware sorting"
+      ]
+    },
+    {
+      "id": "a11y",
+      "name": "Accessibility Agent",
+      "description": "تحسين إمكانية الوصول",
+      "currentScore": 7.0,
+      "targetScore": 10,
+      "status": "running",
+      "checklist": [
+        "ARIA labels on all interactive elements",
+        "Keyboard navigation",
+        "Focus management",
+        "Screen reader support",
+        "Color contrast WCAG AA",
+        "Reduced motion support",
+        "Skip links",
+        "Alt text for images",
+        "Form labels",
+        "Accessible dialogs"
+      ]
+    }
+  ]
+}

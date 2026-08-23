@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ميزان العدالة</string>
+    <string name="title_activity_main">ميزان العدالة</string>
+    <string name="package_name">com.lawyer.platform</string>
+    <string name="custom_url_scheme">com.lawyer.platform</string>
+</resources>

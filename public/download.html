@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحميل ميزان العدالة</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #F5F0E8 0%, #E8E0D0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #C9A227 0%, #8B7355 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 48px;
+            color: white;
+            font-weight: bold;
+        }
+        h1 { color: #1C1917; margin-bottom: 8px; font-size: 28px; }
+        p { color: #78716C; margin-bottom: 32px; }
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #C9A227 0%, #8B7355 100%);
+            color: white;
+            padding: 16px 48px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(201,162,39,0.4);
+            transition: transform 0.2s;
+        }
+        .download-btn:hover { transform: translateY(-2px); }
+        .size { color: #A8A29E; font-size: 14px; margin-top: 16px; }
+        .instructions {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #E7E5E4;
+            text-align: right;
+        }
+        .instructions h3 { color: #1C1917; margin-bottom: 12px; font-size: 16px; }
+        .instructions ol { color: #78716C; padding-right: 20px; }
+        .instructions li { margin-bottom: 8px; font-size: 14px; }
+        code {
+            background: #F5F5F4;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">م</div>
+        <h1>ميزان العدالة</h1>
+        <p>منصة المحامين الذكية - جاهزة للتشغيل</p>
+
+        <a href="lawyer-platform.zip" class="download-btn" download>
+            تحميل المشروع
+        </a>
+        <p class="size">الحجم: 16 ميجابايت | صيغة: ZIP</p>
+
+        <div class="instructions">
+            <h3>خطوات التشغيل:</h3>
+            <ol>
+                <li>فك ضغط الملف <code>lawyer-platform.zip</code></li>
+                <li>افتح Terminal/PowerShell في مجلد <code>app</code></li>
+                <li>شغّل: <code>npm install</code></li>
+                <li>شغّل: <code>npx prisma generate</code></li>
+                <li>شغّل: <code>npx prisma db push</code></li>
+                <li>شغّل: <code>npx prisma db seed</code></li>
+                <li>شغّل: <code>npm start</code></li>
+                <li>افتح المتصفح على <code>http://localhost:3000</code></li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
