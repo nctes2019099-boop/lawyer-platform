@@ -14,7 +14,8 @@ export function proxy(_req: NextRequest) {
   headers.set("X-DNS-Prefetch-Control", "off");
   headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    // السماح بالميكروفون داخل التطبيق لاستخدام الإملاء الصوتي في المفكرة.
+    "camera=(), geolocation=(), interest-cohort=(), microphone=(self)"
   );
   // Only enable HSTS in production (HTTPS).
   if (process.env.NODE_ENV === "production") {
