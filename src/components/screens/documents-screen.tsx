@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, Search, Plus, Download, Trash2, X, File, FileCheck2,
-  FileSpreadsheet, FileImage, Briefcase, Grid3x3, List,
+  FileSpreadsheet, FileImage, Briefcase, Grid3x3, List, ExternalLink, Eye,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { toast } from "react-hot-toast";
@@ -28,6 +28,7 @@ export function DocumentsScreen() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [viewer, setViewer] = useState<any | null>(null);
 
   const load = () => fetch("/api/documents").then((r) => r.json()).then((d) => { setDocs(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false));
   useEffect(() => {
@@ -109,6 +110,9 @@ export function DocumentsScreen() {
               </div>
               <div className="flex items-center gap-0.5">
                 {d.fileUrl && (
+                  <button onClick={() => setViewer(d)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground"><Eye className="w-4 h-4" /></button>
+                )}
+                {d.fileUrl && (
                   <a href={d.fileUrl} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-secondary text-primary"><Download className="w-4 h-4" /></a>
                 )}
                 <button onClick={() => remove(d.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive"><Trash2 className="w-4 h-4" /></button>
@@ -158,6 +162,41 @@ export function DocumentsScreen() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {viewer && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 z-[70] flex flex-col" onClick={() => setViewer(null)}>
+            <div className="flex items-center justify-between p-3 text-white" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xl">{typeIcons[viewer.type] || "📄"}</span>
+                <span className="text-sm font-bold truncate">{viewer.title}</span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <a href={viewer.fileUrl} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center"><ExternalLink className="w-4 h-4" /></a>
+                <a href={viewer.fileUrl} download className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center"><Download className="w-4 h-4" /></a>
+                <button onClick={() => setViewer(null)} className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center"><X className="w-4 h-4" /></button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden bg-card m-3 mt-0 rounded-2xl flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              {isImage(viewer.fileUrl) ? (
+                <img src={viewer.fileUrl} alt={viewer.title} className="max-w-full max-h-full object-contain" />
+              ) : isPdf(viewer.fileUrl) ? (
+                <iframe src={viewer.fileUrl} title={viewer.title} className="w-full h-full rounded-2xl" />
+              ) : (
+                <div className="text-center p-8">
+                  <span className="text-6xl block mb-4">{typeIcons[viewer.type] || "📄"}</span>
+                  <p className="text-sm font-bold mb-1">{viewer.title}</p>
+                  <p className="text-[11px] text-muted-foreground mb-4">{viewer.type} • {new Date(viewer.createdAt).toLocaleDateString("ar-EG")}</p>
+                  <a href={viewer.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl brand-emerald text-white text-sm font-semibold"><ExternalLink className="w-4 h-4" /> فتح الملف</a>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
+function isImage(url: string) { return /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url.split("?")[0] || ""); }
+function isPdf(url: string) { return /\.pdf(\?|$)/i.test(url || ""); }
