@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { getPagination } from "@/lib/pagination";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const { limit } = getPagination(req, { defaultLimit: 50, maxLimit: 200 });
   const category = searchParams.get("category");
   const search = searchParams.get("search");
   const thisMonth = searchParams.get("thisMonth");

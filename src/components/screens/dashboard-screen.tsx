@@ -1,174 +1,267 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { 
-  Briefcase, Users, Calendar, Gavel, TrendingUp, 
-  Clock, Bell, FileText, ChevronLeft, Scale 
+import {
+  Briefcase, CalendarCheck, Users, Calendar, AlertTriangle, Clock,
+  FileText, TrendingUp, ChevronLeft, ChevronRight, Scale, Activity,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { getRelativeTime, formatIQD } from "@/lib/utils";
+
+interface DashboardData {
+  counts: Record<string, number>;
+  winRate: number;
+  recentActivities: any[];
+  upcomingSessions: any[];
+  pendingReminders: any[];
+  finance: { monthIncome: number; monthExpenses: number; net: number };
+}
+
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
+const item = { hidden: { opacity: 0, y: 18, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 280, damping: 24 } } };
+
+function useAnimatedNumber(target: number, duration = 900) {
+  const [value, setValue] = useState(0);
+  const raf = useRef<number | null>(null);
+  useEffect(() => {
+    const start = performance.now();
+    const from = 0;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setValue(Math.round(from + (target - from) * eased));
+      if (p < 1) raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => { if (raf.current) cancelAnimationFrame(raf.current); };
+  }, [target, duration]);
+  return value;
+}
+
+function timeOfDay() {
+  const h = new Date().getHours();
+  if (h < 12) return "صباح الخير";
+  if (h < 18) return "نهارك سعيد";
+  return "مساء الخير";
+}
+
+function daysUntil(date: string | Date) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return Math.round((d.getTime() - now.getTime()) / 86400000);
+}
 
 export function DashboardScreen() {
   const { navigate } = useAppStore();
-  const [stats, setStats] = useState<any>(null);
-  const [activities, setActivities] = useState<any[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [profile, setProfile] = useState<{ name?: string | null; role?: string | null } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
 
   useEffect(() => {
-    setMounted(true);
-    fetch("/api/stats").then(r => r.json()).then(setStats);
-    fetch("/api/activities?limit=5").then(r => r.json()).then(d => setActivities(d.activities || []));
+    fetch("/api/dashboard").then((r) => r.json()).then(setData).catch(() => {}).finally(() => setLoading(false));
+    fetch("/api/user/profile").then((r) => r.json()).then(setProfile).catch(() => {});
   }, []);
 
-  const statItems = [
-    { key: "cases", label: "القضايا", icon: Briefcase, color: "from-amber-500/15 to-amber-600/5", iconColor: "text-amber-600", value: stats?.totalCases || 0 },
-    { key: "clients", label: "الموكلين", icon: Users, color: "from-accent/15 to-accent-light/5", iconColor: "text-accent", value: stats?.totalClients || 0 },
-    { key: "appointments", label: "المواعيد", icon: Calendar, color: "from-emerald-500/15 to-emerald-600/5", iconColor: "text-emerald-600", value: stats?.upcomingAppointments || 0 },
-  ];
+  const c = data?.counts || {};
+  const cases = useAnimatedNumber(c.totalCases || 0);
+  const consultations = useAnimatedNumber(c.upcomingAppointments || 0);
+  const clients = useAnimatedNumber(c.totalClients || 0);
 
-  const quickActions = [
-    { icon: Gavel, label: "قضية جديدة", screen: "cases", action: "add" },
-    { icon: Users, label: "موكل جديد", screen: "clients", action: "add" },
-    { icon: Calendar, label: "موعد", screen: "appointments", action: "add" },
-    { icon: FileText, label: "مذكرة", screen: "notes", action: "add" },
-  ];
+  const nextSession = data?.upcomingSessions?.[0];
+  const alerts = (data?.pendingReminders || []).slice(0, 3);
+  const finance = data?.finance;
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
-  };
+  const monthLabel = new Date(calMonth.y, calMonth.m).toLocaleDateString("ar-EG", { month: "long", year: "numeric" });
+  const calendarDays = buildCalendar(calMonth.y, calMonth.m, data?.upcomingSessions || []);
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
-  };
-
-  if (!mounted) return null;
+  if (loading) {
+    return <div className="flex items-center justify-center h-[60vh]"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   return (
-    <div className="min-h-screen p-4 pb-24 fingerprint-bg">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="max-w-lg mx-auto space-y-4"
-      >
-        {/* الترحيب */}
-        <motion.div variants={itemVariants} className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground">مرحباً بك مجدداً</p>
-            <h2 className="text-lg font-bold text-foreground">لوحة التحكم</h2>
+    <motion.div variants={container} initial="hidden" animate="show" className="max-w-lg mx-auto p-4 space-y-4">
+      {/* User card */}
+      <motion.div variants={item} className="brand-emerald rounded-3xl p-5 text-white relative overflow-hidden shadow-xl shadow-primary/20">
+        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-white/10" />
+        <div className="absolute -bottom-12 -right-8 w-36 h-36 rounded-full bg-white/10" />
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border-2 border-white/30">
+            <Scale className="w-7 h-7" />
           </div>
-          <motion.div 
-            className="w-10 h-10 rounded-full seal-gold flex items-center justify-center"
-            whileHover={{ scale: 1.1, rotate: 10 }}
-          >
-            <Bell className="w-4 h-4 text-white" />
-          </motion.div>
-        </motion.div>
-
-        {/* Bento Stats Grid */}
-        <div className="bento-grid">
-          <motion.div 
-            variants={itemVariants}
-            className="bento-item-large legal-card rounded-2xl p-5 relative overflow-hidden cursor-pointer"
-            onClick={() => navigate("cases")}
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${statItems[0].color} opacity-60`} />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${statItems[0].color} flex items-center justify-center`}>
-                  <Briefcase className={`w-5 h-5 ${statItems[0].iconColor}`} />
-                </div>
-                <TrendingUp className="w-4 h-4 text-emerald-600" />
-              </div>
-              <p className="text-3xl font-bold number-magnify text-foreground">{statItems[0].value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{statItems[0].label}</p>
-              <div className="mt-3 flex items-center gap-1 text-[10px] text-emerald-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                نشطة الآن
-              </div>
-            </div>
-          </motion.div>
-
-          {statItems.slice(1).map((stat) => (
-            <motion.div
-              key={stat.key}
-              variants={itemVariants}
-              className="legal-card rounded-2xl p-4 relative overflow-hidden hover-legal cursor-pointer"
-              onClick={() => navigate(stat.key as any)}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-50`} />
-              <div className="relative z-10">
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-2`}>
-                  <stat.icon className={`w-4 h-4 ${stat.iconColor}`} />
-                </div>
-                <p className="text-xl font-bold number-magnify">{stat.value}</p>
-                <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-              </div>
-            </motion.div>
-          ))}
+          <div>
+            <p className="text-sm text-white/80">{timeOfDay()} 👋</p>
+            <h2 className="text-lg font-extrabold">{profile?.name || "محامي محترف"}</h2>
+            <p className="text-[11px] text-white/70">{profile?.role || "محامي — نقابة المحامين"}</p>
+          </div>
         </div>
+      </motion.div>
 
-        {/* الإجراءات السريعة */}
-        <motion.div variants={itemVariants}>
-          <p className="text-xs font-medium text-muted-foreground mb-3 mr-1">إجراءات سريعة</p>
-          <div className="grid grid-cols-4 gap-2">
-            {quickActions.map((action, i) => (
-              <motion.button
-                key={i}
-                className="legal-card rounded-xl p-3 flex flex-col items-center gap-2 hover-legal"
-                onClick={() => navigate(action.screen as any, { openAdd: true })}
-                whileTap={{ scale: 0.92 }}
-              >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <action.icon className="w-5 h-5 text-primary" />
+      {/* Stat cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard value={cases} label="قضايا نشطة" icon={Briefcase} color="from-emerald-500 to-emerald-600" delta={c.activeCases ? `${c.activeCases} نشطة` : undefined} onClick={() => navigate("cases")} />
+        <StatCard value={consultations} label="مواعيد اليوم" icon={CalendarCheck} color="from-amber-500 to-orange-500" onClick={() => navigate("appointments")} />
+        <StatCard value={clients} label="إجمالي الموكلين" icon={Users} color="from-sky-500 to-blue-600" delta={c.totalClients ? "+1" : undefined} onClick={() => navigate("clients")} />
+      </div>
+
+      {/* Next appointment */}
+      {nextSession ? (
+        <motion.button variants={item} onClick={() => navigate("case-details", { caseId: nextSession.caseId })} className="w-full text-right legal-card rounded-2xl p-4 hover-legal flex items-center gap-3">
+          <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center text-primary shrink-0">
+            <span className="text-[10px] font-medium">{new Date(nextSession.date).toLocaleDateString("ar-EG", { month: "short" })}</span>
+            <span className="text-xl font-extrabold leading-none">{new Date(nextSession.date).getDate()}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] text-primary font-semibold">الموعد القادم</p>
+            <p className="text-sm font-bold truncate">{new Date(nextSession.date).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })} — {nextSession.case?.title || "جلسة محكمة"}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{nextSession.location || nextSession.case?.caseNumber || "—"}</p>
+          </div>
+          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+        </motion.button>
+      ) : (
+        <motion.div variants={item} className="legal-card rounded-2xl p-4 flex items-center gap-3 text-muted-foreground">
+          <CalendarCheck className="w-5 h-5 text-primary" />
+          <p className="text-sm">لا توجد مواعيد قادمة</p>
+        </motion.div>
+      )}
+
+      {/* Mini calendar */}
+      <motion.div variants={item} className="legal-card rounded-2xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => setCalMonth(shiftMonth(calMonth, -1))} className="w-8 h-8 rounded-lg hover:bg-secondary flex items-center justify-center"><ChevronRight className="w-4 h-4" /></button>
+          <p className="text-sm font-bold">{monthLabel}</p>
+          <button onClick={() => setCalMonth(shiftMonth(calMonth, 1))} className="w-8 h-8 rounded-lg hover:bg-secondary flex items-center justify-center"><ChevronLeft className="w-4 h-4" /></button>
+        </div>
+        <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-muted-foreground mb-1">
+          {["ح", "ن", "ث", "ر", "خ", "ج", "س"].map((d, i) => <span key={i}>{d}</span>)}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {calendarDays.map((d, i) => {
+            const today = isSameDay(new Date(), d.date);
+            return (
+              <div key={i} className={`aspect-square flex flex-col items-center justify-center rounded-lg text-[11px] relative ${today ? "brand-emerald text-white font-bold" : d.currentMonth ? "text-foreground" : "text-muted-foreground/40"}`}>
+                {d.day}
+                {d.hasEvent && <span className={`absolute bottom-0.5 w-1 h-1 rounded-full ${today ? "bg-white" : "bg-primary"}`} />}
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* Alerts */}
+      {alerts.length > 0 && (
+        <motion.div variants={item} className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground mr-1 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> تنبيهات المواعيد القادمة</p>
+          {alerts.map((a) => {
+            const days = daysUntil(a.dueAt);
+            const cfg = days <= 1 ? { c: "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300", icon: AlertTriangle }
+              : days <= 3 ? { c: "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300", icon: Clock }
+              : { c: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300", icon: Calendar };
+            const Icon = cfg.icon;
+            return (
+              <div key={a.id} className={`flex items-center gap-3 p-3 rounded-xl ${cfg.c}`}>
+                <Icon className="w-4 h-4 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{a.title}</p>
+                  <p className="text-[10px] opacity-80">{days === 0 ? "اليوم" : days === 1 ? "غداً" : `بعد ${days} أيام`}</p>
                 </div>
-                <span className="text-[10px] font-medium text-foreground">{action.label}</span>
-              </motion.button>
+              </div>
+            );
+          })}
+        </motion.div>
+      )}
+
+      {/* Activity timeline */}
+      <motion.div variants={item} className="legal-card rounded-2xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-bold flex items-center gap-1.5"><Activity className="w-4 h-4 text-primary" /> آخر النشاطات</p>
+          <span className="text-[10px] text-muted-foreground">{data?.recentActivities?.length || 0} عناصر</span>
+        </div>
+        <div className="relative pr-2">
+          <span className="absolute right-[7px] top-1 bottom-1 w-0.5 bg-border" />
+          <div className="space-y-3">
+            {(data?.recentActivities || []).slice(0, 5).map((act, i) => (
+              <div key={act.id || i} className="relative flex gap-3">
+                <span className="relative z-10 w-4 h-4 rounded-full bg-primary/15 border-2 border-background mt-0.5 shrink-0">
+                  <span className="absolute inset-1 rounded-full bg-primary" />
+                </span>
+                <div className="flex-1 min-w-0 pb-1">
+                  <p className="text-xs font-semibold leading-snug">{act.title}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{getRelativeTime(act.createdAt)}</p>
+                </div>
+              </div>
             ))}
           </div>
-        </motion.div>
-
-        {/* آخر النشاطات */}
-        <motion.div variants={itemVariants} className="legal-card rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-foreground">آخر النشاطات</h3>
-            <button onClick={() => navigate("cases")} className="text-[10px] text-primary flex items-center gap-0.5">
-              الكل <ChevronLeft className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="space-y-2">
-            {activities.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground text-xs">
-                <Clock className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                لا توجد نشاطات حديثة
-              </div>
-            ) : (
-              activities.map((activity, i) => (
-                <motion.div
-                  key={activity.id || i}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary/30 transition-colors cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Scale className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{activity.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{activity.description}</p>
-                  </div>
-                  <span className="text-[9px] text-muted-foreground whitespace-nowrap">
-                    {new Date(activity.createdAt).toLocaleDateString("ar-EG")}
-                  </span>
-                </motion.div>
-              ))
-            )}
-          </div>
-        </motion.div>
+        </div>
       </motion.div>
-    </div>
+
+      {/* Monthly performance */}
+      {finance && (
+        <motion.div variants={item} className="legal-card rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <p className="text-sm font-bold">الأداء المالي الشهري</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <div><p className="text-lg font-extrabold text-emerald-600 number-magnify">{formatIQD(finance.monthIncome)}</p><p className="text-[10px] text-muted-foreground">الإيرادات</p></div>
+            <div><p className="text-lg font-extrabold text-rose-600 number-magnify">{formatIQD(finance.monthExpenses)}</p><p className="text-[10px] text-muted-foreground">المصروفات</p></div>
+            <div><p className={`text-lg font-extrabold number-magnify ${finance.net >= 0 ? "text-primary" : "text-rose-600"}`}>{formatIQD(finance.net)}</p><p className="text-[10px] text-muted-foreground">الصافي</p></div>
+          </div>
+          <button onClick={() => navigate("transactions")} className="w-full py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors flex items-center justify-center gap-1">
+            <FileText className="w-3.5 h-3.5" /> عرض التفاصيل المالية
+          </button>
+        </motion.div>
+      )}
+    </motion.div>
   );
+}
+
+function StatCard({ value, label, icon: Icon, color, delta, onClick }: { value: number; label: string; icon: React.ElementType; color: string; delta?: string; onClick?: () => void }) {
+  return (
+    <motion.button variants={item} onClick={onClick} className="text-right">
+      <div className={`bg-gradient-to-br ${color} rounded-2xl p-3 text-white shadow-md relative overflow-hidden h-full`}>
+        <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+        <Icon className="w-5 h-5 mb-1.5 relative z-10" />
+        <p className="text-2xl font-extrabold number-magnify relative z-10 leading-none">{value}</p>
+        <p className="text-[10px] text-white/85 mt-1 relative z-10">{label}</p>
+        {delta && <p className="text-[9px] text-white/70 relative z-10">{delta}</p>}
+      </div>
+    </motion.button>
+  );
+}
+
+function buildCalendar(y: number, m: number, sessions: any[]) {
+  const first = new Date(y, m, 1);
+  const startOffset = (first.getDay() + 0) % 7; // week starts Sat in Iraq
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+  const eventSet = new Set(sessions.map((s) => new Date(s.date).toDateString()));
+  const cells: { day: number; date: Date; currentMonth: boolean; hasEvent: boolean }[] = [];
+  for (let i = startOffset - 1; i >= 0; i--) {
+    const day = prevDays - i;
+    const date = new Date(y, m - 1, day);
+    cells.push({ day, date, currentMonth: false, hasEvent: eventSet.has(date.toDateString()) });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(y, m, d);
+    cells.push({ day: d, date, currentMonth: true, hasEvent: eventSet.has(date.toDateString()) });
+  }
+  while (cells.length % 7 !== 0) {
+    const d = cells.length - daysInMonth - startOffset + 1;
+    const date = new Date(y, m + 1, d);
+    cells.push({ day: d, date, currentMonth: false, hasEvent: eventSet.has(date.toDateString()) });
+  }
+  return cells;
+}
+
+function shiftMonth({ y, m }: { y: number; m: number }, delta: number) {
+  const d = new Date(y, m + delta, 1);
+  return { y: d.getFullYear(), m: d.getMonth() };
+}
+
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type");
 
   if (!q || q.length < 2) {
-    return NextResponse.json({ cases: [], clients: [], laws: [], appointments: [], notes: [] });
+    return NextResponse.json({ cases: [], clients: [], laws: [], appointments: [], notes: [], petitions: [] });
   }
 
   const results: Record<string, unknown[]> = {
@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     laws: [],
     appointments: [],
     notes: [],
+    petitions: [],
   };
 
   if (!type || type === "cases") {
@@ -82,6 +83,16 @@ export async function GET(req: NextRequest) {
           { title: { contains: q } },
           { content: { contains: q } },
         ],
+      },
+      take: 5,
+    });
+  }
+
+  if (!type || type === "petitions") {
+    results.petitions = await prisma.petition.findMany({
+      where: {
+        ownerId: user.id,
+        title: { contains: q },
       },
       take: 5,
     });

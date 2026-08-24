@@ -100,3 +100,22 @@ npx cap open android
 - يمكن تغيير `DATABASE_URL` في `.env` لاستخدام PostgreSQL
 - التطبيق يدعم الوضع الليلي والنهاري
 - PWA جاهز للتثبيت على الموبايل
+
+---
+
+## بناء تطبيق الموبايل (Android على ويندوز)
+
+انظر الدليل المفصّل في [`MOBILE.md`](./MOBILE.md).
+
+ملخص سريع:
+```bash
+npm install
+npx prisma generate && npx prisma db push && npm run db:seed
+npm run build:mobile
+npm run cap:sync
+npm run apk:debug
+```
+
+- PWA: متاحة تلقائياً عبر `manifest.json` و `public/sw.js`.
+- APK: عبر Capacitor في مجلد `android/`.
+- للتطبيق الثابت، عيّن `NEXT_PUBLIC_API_URL` إلى خادم الـ API.

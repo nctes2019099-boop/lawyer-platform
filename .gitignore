@@ -49,3 +49,7 @@ coverage/
 *.db-journal
 prisma/dev.db
 prisma/dev.db-journal
+*.tsbuildinfo
+
+# Capacitor static export
+/out/

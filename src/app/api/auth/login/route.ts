@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/session";
+import { rateLimitIP, getClientIP } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -10,6 +11,13 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!rateLimitIP(getClientIP(req), 10, 60_000)) {
+    return NextResponse.json(
+      { error: "عدد محاولات تسجيل الدخول كبير، حاول لاحقاً." },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
     const { email, password } = schema.parse(body);
