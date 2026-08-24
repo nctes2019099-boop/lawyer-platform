@@ -90,7 +90,16 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
+      "Cairo", "Tajawal", Roboto, Helvetica, Arial, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  /* Define the font variables with a robust system stack (no network fetch at build). */
+  :root {
+    --font-geist-sans: system-ui, -apple-system, "Segoe UI", "Cairo",
+      "Tajawal", Roboto, Helvetica, Arial, sans-serif;
+    --font-geist-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo,
+      Consolas, "Liberation Mono", monospace;
   }
   html {
     scroll-behavior: smooth;

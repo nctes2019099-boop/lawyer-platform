@@ -73,7 +73,7 @@ export default function Home() {
       .then((data) => {
         if (data && data.id) {
           setUser(data);
-          (window as unknown as { __USER_ID__?: string }).__USER_ID__ = data.id;
+          // Auth is maintained via the httpOnly session cookie; no client-side user id needed.
           navigate("dashboard");
         }
       })

@@ -4,10 +4,13 @@ import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
+import { userOwnsResources } from "@/lib/authorization";
+import { getPagination } from "@/lib/pagination";
+
 const createSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).max(200),
   date: z.string().datetime(),
-  location: z.string().optional(),
+  location: z.string().max(200).optional(),
   type: z.string().default("جلسة"),
   status: z.string().default("قادمة"),
   notes: z.string().optional(),
@@ -24,7 +27,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const upcoming = searchParams.get("upcoming");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const { limit } = getPagination(req, { defaultLimit: 50, maxLimit: 200 });
 
   const where: Record<string, unknown> = { ownerId: user.id };
 
@@ -55,6 +58,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = createSchema.parse(body);
+
+    if (!(await userOwnsResources(user.id, { caseId: data.caseId, clientId: data.clientId }))) {
+      return NextResponse.json({ error: "Invalid case or client" }, { status: 400 });
+    }
+
     const appointment = await prisma.appointment.create({
       data: {
         ...data,

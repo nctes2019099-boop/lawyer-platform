@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { getPagination } from "@/lib/pagination";
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -10,8 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
-  const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const { limit } = getPagination(req, { defaultLimit: 20, maxLimit: 100 });
 
   const activities = await prisma.activity.findMany({
     where: { ownerId: user.id },

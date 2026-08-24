@@ -2,18 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { getPagination } from "@/lib/pagination";
 import { z } from "zod";
 
 const createSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  amount: z.number(),
+  amount: z.number().positive("المبلغ يجب أن يكون موجباً"),
   type: z.enum(["income", "expense"]),
   category: z.string().default("مصاريف محكمة"),
   caseId: z.string().optional(),
   clientId: z.string().optional(),
   date: z.string().datetime().optional(),
 });
+
+async function assertOwnership(
+  user: { id: string },
+  caseId?: string,
+  clientId?: string
+) {
+  if (caseId) {
+    const c = await prisma.case.findFirst({
+      where: { id: caseId, ownerId: user.id },
+      select: { id: true },
+    });
+    if (!c) return false;
+  }
+  if (clientId) {
+    const cl = await prisma.client.findFirst({
+      where: { id: clientId, ownerId: user.id },
+      select: { id: true },
+    });
+    if (!cl) return false;
+  }
+  return true;
+}
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -24,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const { limit } = getPagination(req, { defaultLimit: 50, maxLimit: 200 });
 
   const where: Record<string, unknown> = { ownerId: user.id };
   if (type) where.type = type;
@@ -71,6 +94,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = createSchema.parse(body);
+
+    if (!(await assertOwnership(user, data.caseId, data.clientId))) {
+      return NextResponse.json({ error: "Invalid case or client" }, { status: 400 });
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         ...data,

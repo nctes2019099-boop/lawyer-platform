@@ -40,6 +40,9 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const { id, isFavorite } = await req.json();
+    if (typeof id !== "string" || typeof isFavorite !== "boolean") {
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    }
     await prisma.law.update({ where: { id }, data: { isFavorite } });
     return NextResponse.json({ success: true });
   } catch {
