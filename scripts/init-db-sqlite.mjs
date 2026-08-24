@@ -3,7 +3,9 @@
 // Mirrors prisma/schema.prisma. For normal dev, prefer `prisma db push`.
 import { createClient } from "@libsql/client";
 
-const db = createClient({ url: "file:prisma/dev.db" });
+// Honor DATABASE_URL (production/Docker); fall back to the local dev SQLite file.
+const dbUrl = process.env.DATABASE_URL || "file:prisma/dev.db";
+const db = createClient({ url: dbUrl });
 
 const SQL = `
 CREATE TABLE IF NOT EXISTS User (

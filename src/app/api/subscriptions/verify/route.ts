@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { sendEmail, paymentReceiptEmail } from "@/lib/email";
 import { z } from "zod";
 
 const schema = z.object({ paymentId: z.string().min(1) });
+
+function formatIQD(n: number) {
+  return new Intl.NumberFormat("ar-IQ").format(n) + " د.ع";
+}
 
 // Verify (and in this mock flow, complete) a payment, then activate the subscription.
 export async function POST(req: NextRequest) {
@@ -50,6 +55,16 @@ export async function POST(req: NextRequest) {
         autoRenew: true,
       },
     });
+
+    // Fire-and-forget receipt email; never block activation on email failure.
+    const receipt = paymentReceiptEmail({
+      name: user.name || "عميلنا العزيز",
+      planName: plan.name,
+      amount: formatIQD(payment.amount),
+      transactionId: payment.transactionId,
+      date: now.toLocaleDateString("ar-IQ"),
+    });
+    void sendEmail({ to: user.email, subject: receipt.subject, html: receipt.html, text: receipt.text });
 
     return NextResponse.json({ success: true, subscription });
   } catch (e) {

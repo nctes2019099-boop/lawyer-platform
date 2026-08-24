@@ -23,7 +23,9 @@ import { SubscriptionsScreen } from "@/components/screens/subscriptions-screen";
 import { TransactionsScreen } from "@/components/screens/transactions-screen";
 import { AdminScreen } from "@/components/screens/admin-screen";
 import { TasksScreen } from "@/components/screens/tasks-screen";
+import { RegisterScreen } from "@/components/screens/register-screen";
 import { PWARegister } from "@/components/pwa-register";
+import { LandingPage } from "@/components/landing/landing-page";
 
 function ErrorFallback({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -48,18 +50,29 @@ function ScreenLoader() {
   );
 }
 
+type PublicPlan = {
+  id: string;
+  name: string;
+  price: number;
+  durationDays: number;
+  description: string | null;
+  isActive: boolean;
+  sortOrder: number;
+};
+
 export default function Home() {
   const { currentScreen, darkMode, setDarkMode, navigate } = useAppStore();
   const [user, setUser] = useState<{ id: string; name: string; email: string; isAdmin: boolean; role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [plans, setPlans] = useState<PublicPlan[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("darkMode");
     if (saved) setDarkMode(saved === "true");
 
     fetch("/api/user/profile")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data && data.id) {
           setUser(data);
@@ -68,6 +81,15 @@ export default function Home() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Load public pricing for the landing page (no auth required).
+    fetch("/api/subscriptions/plans")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.plans ?? [];
+        setPlans(list);
+      })
+      .catch(() => {});
   }, [setDarkMode, navigate]);
 
   useEffect(() => {
@@ -81,6 +103,8 @@ export default function Home() {
       switch (currentScreen) {
         case "login":
           return <LoginScreen onLogin={(u) => { setUser(u); navigate("dashboard"); }} />;
+        case "register":
+          return <RegisterScreen onRegistered={(u) => { setUser(u); navigate("dashboard"); }} />;
         case "dashboard": return <DashboardScreen />;
         case "cases": return <CasesScreen />;
         case "case-details": return <CaseDetailsScreen />;
@@ -118,6 +142,30 @@ export default function Home() {
         </div>
       </div>
     );
+  }
+
+  // Unauthenticated visitors see the public marketing/landing page, unless they
+  // explicitly requested #login or #register — then show the auth screen.
+  if (!user) {
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (hash === "#login" || hash === "#register") {
+      const goDashboard = (u: { id: string; name: string; email: string; isAdmin: boolean; role?: string }) => {
+        setUser(u);
+        if (typeof window !== "undefined") window.location.hash = "";
+        navigate("dashboard");
+      };
+      return (
+        <div className="min-h-screen bg-background text-foreground">
+          <Toaster position="top-center" />
+          {hash === "#register" ? (
+            <RegisterScreen onRegistered={goDashboard} />
+          ) : (
+            <LoginScreen onLogin={goDashboard} />
+          )}
+        </div>
+      );
+    }
+    return <LandingPage plans={plans} />;
   }
 
   const isLogin = currentScreen === "login";

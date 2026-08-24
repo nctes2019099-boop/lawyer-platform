@@ -39,6 +39,41 @@ export function SubscriptionsScreen() {
   };
   useEffect(() => { load(); }, []);
 
+  // Handle return from the payment gateway (?payment=success|failed) or a
+  // pending payment stashed before redirecting away.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const outcome = params.get("payment");
+    const pending = sessionStorage.getItem("pendingPaymentId");
+    if (outcome === "failed") {
+      setStatus({ kind: "failed" });
+      sessionStorage.removeItem("pendingPaymentId");
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    if ((outcome === "success" || pending) && pending) {
+      const pid = pending;
+      sessionStorage.removeItem("pendingPaymentId");
+      window.history.replaceState({}, "", window.location.pathname);
+      fetch("/api/subscriptions/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId: pid }),
+      })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((d) => {
+          setStatus({
+            kind: "success",
+            planName: d.subscription?.planId ? "" : "",
+            ref: pid,
+          });
+          toast.success("تم تفعيل اشتراكك بنجاح");
+          load();
+        })
+        .catch(() => setStatus({ kind: "failed" }));
+    }
+  }, []);
+
   const startPayment = (plan: any) => { setSelectedPlan(plan); setStatus(null); };
 
   const confirmPayment = async () => {
@@ -52,9 +87,26 @@ export function SubscriptionsScreen() {
       if (!res.ok) throw new Error();
       const payment = await res.json();
 
-      // Mock provider: complete immediately; zaincash: simulate processing.
-      await new Promise((r) => setTimeout(r, method === "zaincash" ? 1400 : 700));
+      // Free plans activate immediately with no payment.
+      if (payment.activated) {
+        setStatus({ kind: "success", planName: selectedPlan.name, ref: "" });
+        load();
+        setPaying(false);
+        return;
+      }
 
+      // Real gateway: redirect the user to ZainCash to complete the payment.
+      // The gateway redirects back to our webhook which verifies and then
+      // forwards to /subscriptions?payment=success.
+      if (payment.paymentUrl) {
+        // Persist the pending payment so the return page can poll/verify.
+        sessionStorage.setItem("pendingPaymentId", payment.paymentId);
+        window.location.href = payment.paymentUrl;
+        return; // page unloads; keep paying=true so the sheet stays in flight.
+      }
+
+      // Mock / sandbox auto-verify: complete after a short processing delay.
+      await new Promise((r) => setTimeout(r, method === "zaincash" ? 1400 : 700));
       const verifyRes = await fetch("/api/subscriptions/verify", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paymentId: payment.paymentId }),

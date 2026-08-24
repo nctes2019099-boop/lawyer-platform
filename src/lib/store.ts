@@ -18,7 +18,8 @@ export type ScreenName =
   | "transactions"
   | "tasks"
   | "admin"
-  | "login";
+  | "login"
+  | "register";
 
 interface AppState {
   currentScreen: ScreenName;

@@ -22,6 +22,19 @@ export const env = {
   PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER || "mock",
   ZAINCASH_TOKEN: process.env.ZAINCASH_TOKEN,
   ZAINCASH_SECRET: process.env.ZAINCASH_SECRET,
+  ZAINCASH_MERCHANT_ID: process.env.ZAINCASH_MERCHANT_ID,
+  ZAINCASH_MSISDN: process.env.ZAINCASH_MSISDN,
+  ZAINCASH_SANDBOX: bool(process.env.ZAINCASH_SANDBOX, true),
+  // SMTP / transactional email (Resent, or any host:port SMTP relay)
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: Number(process.env.SMTP_PORT || 587),
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  SMTP_FROM: process.env.SMTP_FROM || "Mizan <no-reply@mizan.app>",
+  CONTACT_EMAIL: process.env.CONTACT_EMAIL || "support@mizan.app",
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  UPLOAD_DIR: process.env.UPLOAD_DIR,
+  MAX_UPLOAD_MB: process.env.MAX_UPLOAD_MB || "20",
 } as const;
 
 /**

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { userOwnsResources } from "@/lib/authorization";
 import { getPagination } from "@/lib/pagination";
+import { checkQuota } from "@/lib/quotas";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -64,6 +65,13 @@ export async function POST(req: NextRequest) {
 
     if (!(await userOwnsResources(user.id, { clientId: data.clientId }))) {
       return NextResponse.json({ error: "Invalid client" }, { status: 400 });
+    }
+
+    // Enforce plan quota on number of cases.
+    const caseCount = await prisma.case.count({ where: { ownerId: user.id } });
+    const quota = await checkQuota(user.id, "maxCases", caseCount);
+    if (!quota.allowed) {
+      return NextResponse.json({ error: quota.message, upgradeRequired: true }, { status: 402 });
     }
 
     const case_ = await prisma.case.create({

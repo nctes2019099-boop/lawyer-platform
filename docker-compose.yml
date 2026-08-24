@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    image: mizan-lawyer-platform:latest
+    container_name: mizan-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # --- Required: change these before going live ---
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET:-CHANGE_ME_TO_A_LONG_RANDOM_STRING}"
+      NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:3000}"
+      NODE_ENV: "production"
+
+      # --- Database (SQLite file inside the /data volume) ---
+      DATABASE_URL: "file:/data/prod.db"
+
+      # --- File uploads ---
+      UPLOAD_DIR: "/data/uploads"
+      MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-20}"
+
+      # --- ZainCash payments (Iraq) ---
+      # Get these from ZainCash. Set ZAINCASH_SANDBOX=false for live charges.
+      ZAINCASH_MERCHANT_ID: "${ZAINCASH_MERCHANT_ID:-}"
+      ZAINCASH_MSISDN: "${ZAINCASH_MSISDN:-}"
+      ZAINCASH_TOKEN: "${ZAINCASH_TOKEN:-}"
+      ZAINCASH_SECRET: "${ZAINCASH_SECRET:-}"
+      ZAINCASH_SANDBOX: "${ZAINCASH_SANDBOX:-true}"
+
+      # --- Transactional email (Resend) ---
+      RESEND_API_KEY: "${RESEND_API_KEY:-}"
+      CONTACT_EMAIL: "${CONTACT_EMAIL:-support@mizan.app}"
+
+      # --- Public site URL used in payment redirects / emails ---
+      NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
+    volumes:
+      - mizan-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  mizan-data:
