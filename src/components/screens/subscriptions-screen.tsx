@@ -93,7 +93,11 @@ export function SubscriptionsScreen() {
           </div>
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/20">
             <span className="text-[11px] flex items-center gap-1">
-              {current.autoRenew ? <><span className="w-2 h-2 rounded-full bg-white" /> تجديد تلقائي مفعّل</> : <Ban className="w-3 h-3" /> تجديد تلقائي متوقف}
+              {current.autoRenew ? (
+                <><span className="w-2 h-2 rounded-full bg-white" /> تجديد تلقائي مفعّل</>
+              ) : (
+                <><Ban className="w-3 h-3" /> تجديد تلقائي متوقف</>
+              )}
             </span>
             {current.autoRenew && (
               <button onClick={cancelAutoRenew} disabled={cancelling} className="text-[11px] bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-semibold disabled:opacity-60">
