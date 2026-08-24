@@ -7,7 +7,7 @@ import { useAppStore } from "@/lib/store";
 import { toast } from "react-hot-toast";
 
 export function NotesScreen() {
-  const { navigate, setDialogOpen } = useAppStore();
+  const { navigate, dialogOpen, setDialogOpen } = useAppStore();
   const [notes, setNotes] = useState<Record<string, unknown>[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -18,6 +18,10 @@ export function NotesScreen() {
       .then((data) => { setNotes(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (dialogOpen === "add") { setDialogOpen(null); navigate("note-editor"); }
+  }, [dialogOpen, setDialogOpen, navigate]);
 
   const filtered = notes.filter((n: any) => !search || (n.title || "").includes(search) || (n.content || "").includes(search));
 
