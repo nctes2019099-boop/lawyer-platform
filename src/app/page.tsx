@@ -3,10 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useAppStore } from "@/lib/store";
 import { Toaster } from "react-hot-toast";
-import { BottomNav } from "@/components/layout/bottom-nav";
-import { AppHeader } from "@/components/layout/app-header";
-import { SideDrawer } from "@/components/layout/side-drawer";
-import { GlobalSearchDialog } from "@/components/layout/global-search-dialog";
+import { AppShell } from "@/components/layout/app-shell";
 import { PageTransition } from "@/components/ui/page-transition";
 import { LoginScreen } from "@/components/screens/login-screen";
 import { DashboardScreen } from "@/components/screens/dashboard-screen";
@@ -36,10 +33,7 @@ function ErrorFallback({ error, reset }: { error: Error; reset: () => void }) {
       </div>
       <h2 className="text-lg font-bold mb-2">حدث خطأ غير متوقع</h2>
       <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-      <button
-        onClick={reset}
-        className="px-4 py-2 rounded-xl seal-gold text-white text-sm font-medium"
-      >
+      <button onClick={reset} className="px-4 py-2 rounded-xl brand-emerald text-white text-sm font-medium">
         إعادة المحاولة
       </button>
     </div>
@@ -56,12 +50,7 @@ function ScreenLoader() {
 
 export default function Home() {
   const { currentScreen, darkMode, setDarkMode, navigate } = useAppStore();
-  const [user, setUser] = useState<{
-    id: string;
-    name: string;
-    email: string;
-    isAdmin: boolean;
-  } | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; email: string; isAdmin: boolean; role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -74,7 +63,6 @@ export default function Home() {
       .then((data) => {
         if (data && data.id) {
           setUser(data);
-          // Auth is maintained via the httpOnly session cookie; no client-side user id needed.
           navigate("dashboard");
         }
       })
@@ -83,55 +71,35 @@ export default function Home() {
   }, [setDarkMode, navigate]);
 
   useEffect(() => {
-    if (darkMode) document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
+    document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("darkMode", String(darkMode));
   }, [darkMode]);
 
   const renderScreen = () => {
-    if (error) {
-      return <ErrorFallback error={error} reset={() => setError(null)} />;
-    }
+    if (error) return <ErrorFallback error={error} reset={() => setError(null)} />;
     try {
       switch (currentScreen) {
         case "login":
           return <LoginScreen onLogin={(u) => { setUser(u); navigate("dashboard"); }} />;
-        case "dashboard":
-          return <DashboardScreen />;
-        case "cases":
-          return <CasesScreen />;
-        case "case-details":
-          return <CaseDetailsScreen />;
-        case "clients":
-          return <ClientsScreen />;
-        case "client-profile":
-          return <ClientProfileScreen />;
-        case "analytics":
-          return <AnalyticsScreen />;
-        case "laws":
-          return <LawsScreen />;
-        case "petitions":
-          return <PetitionsScreen />;
-        case "notes":
-          return <NotesScreen />;
-        case "note-editor":
-          return <NoteEditorScreen />;
-        case "appointments":
-          return <AppointmentsScreen />;
-        case "settings":
-          return <SettingsScreen />;
-        case "documents":
-          return <DocumentsScreen />;
+        case "dashboard": return <DashboardScreen />;
+        case "cases": return <CasesScreen />;
+        case "case-details": return <CaseDetailsScreen />;
+        case "clients": return <ClientsScreen />;
+        case "client-profile": return <ClientProfileScreen />;
+        case "analytics": return <AnalyticsScreen />;
+        case "laws": return <LawsScreen />;
+        case "petitions": return <PetitionsScreen />;
+        case "notes": return <NotesScreen />;
+        case "note-editor": return <NoteEditorScreen />;
+        case "appointments": return <AppointmentsScreen />;
+        case "settings": return <SettingsScreen />;
+        case "documents": return <DocumentsScreen />;
         case "subscriptions":
           return <SubscriptionScreen />;
-        case "transactions":
-          return <TransactionsScreen />;
-        case "tasks":
-          return <TasksScreen />;
-        case "admin":
-          return <AdminScreen />;
-        default:
-          return <DashboardScreen />;
+        case "transactions": return <TransactionsScreen />;
+        case "tasks": return <TasksScreen />;
+        case "admin": return <AdminScreen />;
+        default: return <DashboardScreen />;
       }
     } catch (e) {
       setError(e as Error);
@@ -143,8 +111,8 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl seal-gold flex items-center justify-center animate-pulse">
-            <span className="text-2xl text-white font-bold">م</span>
+          <div className="w-14 h-14 rounded-2xl brand-emerald flex items-center justify-center animate-pulse shadow-lg shadow-primary/30">
+            <span className="text-2xl text-white font-bold">⚖️</span>
           </div>
           <p className="text-sm text-muted-foreground">جاري التحميل...</p>
         </div>
@@ -152,33 +120,31 @@ export default function Home() {
     );
   }
 
+  const isLogin = currentScreen === "login";
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <PWARegister />
-      <a href="#main-content" className="skip-link">
-        تخطي إلى المحتوى الرئيسي
-      </a>
+      <a href="#main-content" className="skip-link">تخطي إلى المحتوى الرئيسي</a>
       <Toaster
         position="top-center"
         toastOptions={{
           duration: 3000,
           style: {
             borderRadius: "16px",
-            background: darkMode ? "#1a1a1a" : "#fff",
+            background: darkMode ? "#0f1a17" : "#fff",
             color: darkMode ? "#fff" : "#000",
-            border: `1px solid ${darkMode ? "#333" : "#e5e5e5"}`,
+            border: `1px solid ${darkMode ? "#1f3a32" : "#e5e7eb"}`,
           },
         }}
       />
-      {currentScreen !== "login" && <AppHeader user={user} />}
-      <SideDrawer user={user} />
-      <GlobalSearchDialog />
-      <main id="main-content" className={currentScreen === "login" ? "" : "pb-20 pt-16"}>
-        <Suspense fallback={<ScreenLoader />}>
-          <PageTransition>{renderScreen()}</PageTransition>
-        </Suspense>
-      </main>
-      {currentScreen !== "login" && <BottomNav />}
+      <AppShell user={user} showChrome={!isLogin}>
+        <main id="main-content">
+          <Suspense fallback={<ScreenLoader />}>
+            <PageTransition>{renderScreen()}</PageTransition>
+          </Suspense>
+        </main>
+      </AppShell>
     </div>
   );
 }

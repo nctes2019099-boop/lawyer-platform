@@ -4,53 +4,53 @@
 
 /* ===== نظام ألوان ميزان العدالة - ذهبي كحلي فريد ===== */
 :root {
-  --background: 40 20% 96%;
-  --foreground: 30 10% 10%;
+  --background: 150 20% 98%;
+  --foreground: 160 10% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 30 10% 10%;
+  --card-foreground: 160 10% 10%;
   --popover: 0 0% 100%;
-  --popover-foreground: 30 10% 10%;
-  --primary: 45 70% 47%;
+  --popover-foreground: 160 10% 10%;
+  --primary: 158 84% 30%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 40 15% 92%;
-  --secondary-foreground: 30 10% 20%;
-  --muted: 40 15% 92%;
-  --muted-foreground: 30 8% 45%;
-  --accent: 215 50% 25%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 350 55% 35%;
+  --secondary: 150 16% 94%;
+  --secondary-foreground: 160 10% 20%;
+  --muted: 150 16% 94%;
+  --muted-foreground: 160 8% 42%;
+  --accent: 158 64% 94%;
+  --accent-foreground: 158 84% 18%;
+  --destructive: 350 70% 45%;
   --destructive-foreground: 0 0% 100%;
-  --border: 40 12% 85%;
-  --input: 40 12% 85%;
-  --ring: 45 70% 47%;
+  --border: 150 12% 88%;
+  --input: 150 12% 88%;
+  --ring: 158 84% 30%;
   --radius: 1rem;
-  --chart-1: 45 70% 47%;
-  --chart-2: 215 50% 25%;
-  --chart-3: 350 55% 35%;
-  --chart-4: 170 40% 35%;
-  --chart-5: 280 40% 45%;
+  --chart-1: 158 84% 30%;
+  --chart-2: 173 70% 36%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 217 60% 52%;
+  --chart-5: 280 50% 55%;
 }
 
 .dark {
-  --background: 240 25% 8%;
-  --foreground: 40 15% 92%;
-  --card: 240 20% 12%;
-  --card-foreground: 40 15% 92%;
-  --popover: 240 20% 12%;
-  --popover-foreground: 40 15% 92%;
-  --primary: 45 70% 52%;
-  --primary-foreground: 240 25% 8%;
-  --secondary: 240 15% 18%;
-  --secondary-foreground: 40 10% 75%;
-  --muted: 240 15% 18%;
-  --muted-foreground: 40 8% 55%;
-  --accent: 215 45% 40%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 350 50% 45%;
+  --background: 160 28% 7%;
+  --foreground: 150 12% 94%;
+  --card: 160 24% 10%;
+  --card-foreground: 150 12% 94%;
+  --popover: 160 24% 10%;
+  --popover-foreground: 150 12% 94%;
+  --primary: 158 80% 45%;
+  --primary-foreground: 160 30% 7%;
+  --secondary: 160 16% 16%;
+  --secondary-foreground: 150 10% 80%;
+  --muted: 160 16% 16%;
+  --muted-foreground: 150 8% 60%;
+  --accent: 158 50% 20%;
+  --accent-foreground: 150 12% 94%;
+  --destructive: 350 65% 52%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 12% 20%;
-  --input: 240 12% 20%;
-  --ring: 45 70% 52%;
+  --border: 160 12% 18%;
+  --input: 160 12% 18%;
+  --ring: 158 80% 45%;
 }
 
 @theme inline {
@@ -106,6 +106,15 @@
   }
 }
 
+/* ===== الأدوات العامة ===== */
+@layer utilities {
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0); }
+  .pt-safe { padding-top: env(safe-area-inset-top, 0); }
+  .brand-emerald {
+    background-image: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+}
+
 /* ===== حقول النماذج الموحّدة ===== */
 @layer components {
   .form-input {
@@ -132,7 +141,7 @@
 /* بطاقة قانونية مع خط ذهبي علوي */
 .legal-card {
   background: linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(250,248,244,0.95) 100%);
-  border: 1px solid rgba(201,162,39,0.12);
+  border: 1px solid rgba(16,160,110,0.12);
   box-shadow: 
     0 1px 3px rgba(0,0,0,0.04),
     0 4px 12px rgba(0,0,0,0.03),
@@ -148,7 +157,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #C9A227 20%, #8B7355 50%, #C9A227 80%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, #10a372 20%, #047857 50%, #10a372 80%, transparent 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
 }
@@ -159,7 +168,7 @@
 
 .dark .legal-card {
   background: linear-gradient(145deg, rgba(26,26,46,0.98) 0%, rgba(20,20,36,0.95) 100%);
-  border-color: rgba(212,175,55,0.12);
+  border-color: rgba(16,185,129,0.12);
   box-shadow: 
     0 1px 3px rgba(0,0,0,0.3),
     0 4px 12px rgba(0,0,0,0.2),
@@ -168,11 +177,11 @@
 
 /* ختم ذهبي */
 .seal-gold {
-  background: radial-gradient(circle at 30% 30%, #E8D5A3 0%, #C9A227 40%, #8B7355 100%);
+  background: radial-gradient(circle at 30% 30%, #6ee7b7 0%, #10a372 40%, #047857 100%);
   box-shadow: 
     inset -2px -2px 4px rgba(0,0,0,0.2),
     inset 2px 2px 4px rgba(255,255,255,0.3),
-    0 2px 8px rgba(201,162,39,0.4);
+    0 2px 8px rgba(16,160,110,0.4);
 }
 
 /* زجاجية قانونية */
@@ -180,25 +189,25 @@
   background: rgba(255,255,255,0.72);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(201,162,39,0.08);
+  border: 1px solid rgba(16,160,110,0.08);
 }
 
 .dark .glass-legal {
   background: rgba(26,26,46,0.72);
-  border-color: rgba(212,175,55,0.08);
+  border-color: rgba(16,185,129,0.08);
 }
 
 /* خط فاصل ذهبي */
 .gold-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, #C9A227 20%, #8B7355 50%, #C9A227 80%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, #10a372 20%, #047857 50%, #10a372 80%, transparent 100%);
   opacity: 0.35;
 }
 
 /* خلفية بصمة */
 .fingerprint-bg {
   background-image: 
-    radial-gradient(circle at 20% 80%, rgba(201,162,39,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(16,160,110,0.06) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(30,58,95,0.05) 0%, transparent 50%);
 }
 
@@ -249,8 +258,8 @@
 
 /* تأثير الوميض الذهبي */
 @keyframes goldPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(201,162,39,0); }
-  50% { box-shadow: 0 0 20px 4px rgba(201,162,39,0.12); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16,160,110,0); }
+  50% { box-shadow: 0 0 20px 4px rgba(16,160,110,0.12); }
 }
 
 .gold-pulse {
@@ -293,16 +302,16 @@
 /* Scrollbar مخصص */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.25); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.4); }
+::-webkit-scrollbar-thumb { background: rgba(16,160,110,0.25); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(16,160,110,0.4); }
 
 /* Utilities */
 @layer utilities {
   .brand-gradient {
-    background: linear-gradient(135deg, #C9A227 0%, #8B7355 100%);
+    background: linear-gradient(135deg, #10a372 0%, #047857 100%);
   }
   .brand-gradient-text {
-    background: linear-gradient(135deg, #C9A227 0%, #8B7355 100%);
+    background: linear-gradient(135deg, #10a372 0%, #047857 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
