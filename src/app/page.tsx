@@ -26,6 +26,7 @@ import { SubscriptionScreen } from "@/components/screens/subscription-screen";
 import { TransactionsScreen } from "@/components/screens/transactions-screen";
 import { AdminScreen } from "@/components/screens/admin-screen";
 import { TasksScreen } from "@/components/screens/tasks-screen";
+import { PWARegister } from "@/components/pwa-register";
 
 function ErrorFallback({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -153,6 +154,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <PWARegister />
       <a href="#main-content" className="skip-link">
         تخطي إلى المحتوى الرئيسي
       </a>

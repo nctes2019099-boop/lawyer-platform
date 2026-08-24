@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const lawCreateSchema = z.object({
+  title: z.string().min(1).max(300),
+  number: z.string().max(50).optional(),
+  year: z.string().max(10).optional(),
+  category: z.string().default("مدني"),
+  content: z.string().min(1),
+});
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -47,5 +56,24 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 400 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!rateLimit(user.id, 20, 60000)) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
+  try {
+    const data = lawCreateSchema.parse(await req.json());
+    const law = await prisma.law.create({ data });
+    return NextResponse.json(law, { status: 201 });
+  } catch (error) {
+    const message =
+      error instanceof z.ZodError
+        ? error.errors.map((e) => e.message).join(", ")
+        : "Invalid data";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

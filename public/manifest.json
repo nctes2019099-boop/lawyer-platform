@@ -1,15 +1,33 @@
 {
-  "name": "ميزان العدالة",
+  "name": "ميزان العدالة - منصة المحامين",
   "short_name": "ميزان",
-  "description": "منصة المحامين الذكية",
+  "description": "منصة إدارة مكتب المحاماة المتكاملة: القضايا، الموكلين، المواعيد، المالية والمزيد",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#F5F0E8",
   "theme_color": "#C9A227",
-  "orientation": "portrait",
-  "scope": "/",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["business", "productivity", "finance"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "splash_pages": [
+    { "src": "/splash-1242x2436.png", "sizes": "1242x2436", "type": "image/png" }
+  ],
+  "shortcuts": [
+    { "name": "القضايا", "short_name": "القضايا", "url": "/?screen=cases" },
+    { "name": "إضافة قضية", "short_name": "إضافة", "url": "/?screen=cases&action=add" },
+    { "name": "المواعيد", "short_name": "المواعيد", "url": "/?screen=appointments" }
   ]
 }

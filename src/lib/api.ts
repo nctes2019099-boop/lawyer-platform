@@ -1,3 +1,5 @@
+import { apiUrl } from "./config";
+
 export async function apiFetch<T = unknown>(
   url: string,
   options?: RequestInit
@@ -7,12 +9,12 @@ export async function apiFetch<T = unknown>(
     ...(options?.headers as Record<string, string> | undefined),
   };
 
-  // Auth is handled by the httpOnly session cookie. Never send a user id
-  // from the client — the server derives identity from the verified JWT.
-  const res = await fetch(url, {
+  // Auth is handled by the httpOnly session cookie. In native (Capacitor)
+  // builds where the origin differs, send credentials cross-origin.
+  const res = await fetch(apiUrl(url), {
     ...options,
     headers,
-    credentials: "same-origin",
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -20,7 +22,6 @@ export async function apiFetch<T = unknown>(
     throw new Error(err.error || `HTTP ${res.status}`);
   }
 
-  // Handle 204 No Content
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
