@@ -19,7 +19,7 @@ import { NoteEditorScreen } from "@/components/screens/note-editor-screen";
 import { AppointmentsScreen } from "@/components/screens/appointments-screen";
 import { SettingsScreen } from "@/components/screens/settings-screen";
 import { DocumentsScreen } from "@/components/screens/documents-screen";
-import { SubscriptionScreen } from "@/components/screens/subscription-screen";
+import { SubscriptionsScreen } from "@/components/screens/subscriptions-screen";
 import { TransactionsScreen } from "@/components/screens/transactions-screen";
 import { AdminScreen } from "@/components/screens/admin-screen";
 import { TasksScreen } from "@/components/screens/tasks-screen";
@@ -95,7 +95,7 @@ export default function Home() {
         case "settings": return <SettingsScreen />;
         case "documents": return <DocumentsScreen />;
         case "subscriptions":
-          return <SubscriptionScreen />;
+          return <SubscriptionsScreen />;
         case "transactions": return <TransactionsScreen />;
         case "tasks": return <TasksScreen />;
         case "admin": return <AdminScreen />;
