@@ -136,7 +136,7 @@ export function SubscriptionsScreen() {
               </div>
               {features.length > 0 && (
                 <ul className="space-y-1.5 mb-4">
-                  {features.slice(0, 6).map((f, fi) => (
+                  {features.slice(0, 6).map((f: string, fi: number) => (
                     <li key={fi} className="flex items-center gap-2 text-xs">
                       <Check className="w-3.5 h-3.5 text-primary shrink-0" /> <span>{f}</span>
                     </li>
