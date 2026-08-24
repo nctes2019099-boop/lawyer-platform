@@ -106,6 +106,27 @@
   }
 }
 
+/* ===== حقول النماذج الموحّدة ===== */
+@layer components {
+  .form-input {
+    @apply w-full h-11 rounded-xl bg-secondary/50 border border-transparent px-3 text-sm
+           outline-none transition-all focus:ring-2 focus:ring-primary/20 focus:bg-background
+           focus:border-primary/30 placeholder:text-muted-foreground/50;
+  }
+  select.form-input {
+    @apply appearance-none cursor-pointer;
+    background-image: linear-gradient(45deg, transparent 50%, hsl(var(--muted-foreground)) 50%),
+                      linear-gradient(135deg, hsl(var(--muted-foreground)) 50%, transparent 50%);
+    background-position: calc(12px) 50%, calc(16px) 50%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+    padding-left: 32px;
+  }
+  textarea.form-input {
+    @apply h-auto py-2.5 leading-relaxed;
+  }
+}
+
 /* ===== تأثيرات فريدة - ميزان العدالة ===== */
 
 /* بطاقة قانونية مع خط ذهبي علوي */
