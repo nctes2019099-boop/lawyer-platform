@@ -7,7 +7,7 @@ import { NextRequest } from "next/server";
 export function getPagination(
   req: NextRequest,
   opts: { defaultLimit?: number; maxLimit?: number } = {}
-): { limit: number; offset: number } {
+): { limit: number; offset: number; searchParams: URLSearchParams } {
   const { defaultLimit = 50, maxLimit = 200 } = opts;
   const sp = new URL(req.url).searchParams;
 
@@ -20,5 +20,5 @@ export function getPagination(
   );
   const offset = Math.max(0, Number.isFinite(rawOffset) ? rawOffset : 0);
 
-  return { limit, offset };
+  return { limit, offset, searchParams: sp };
 }
