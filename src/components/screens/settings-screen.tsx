@@ -6,6 +6,7 @@ import {
   User, Moon, Sun, Globe, Database, Shield, LogOut,
   ChevronLeft, Trash2, Download, Upload, Info, Bell
 } from "lucide-react";
+import { useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { toast } from "react-hot-toast";
 
@@ -14,6 +15,8 @@ export function SettingsScreen() {
   const [user, setUser] = useState<any>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -23,6 +26,52 @@ export function SettingsScreen() {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     navigate("login");
+  };
+
+  const handleBackup = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/backup");
+      if (!res.ok) throw new Error("backup failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `mizan-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("تم تنزيل النسخة الاحتياطية");
+    } catch {
+      toast.error("تعذّر إنشاء النسخة الاحتياطية");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      const res = await fetch("/api/backup/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "restore failed");
+      const total = Object.values(data.counts as Record<string, number>).reduce((a, b) => a + b, 0);
+      toast.success(`تمت الاستيراد: ${total} عنصر`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "ملف غير صالح");
+    } finally {
+      setBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const sections = [
@@ -43,8 +92,8 @@ export function SettingsScreen() {
     {
       title: "البيانات",
       items: [
-        { icon: Download, label: "تصدير البيانات", sub: "JSON", action: () => toast("قريباً") },
-        { icon: Upload, label: "استيراد البيانات", sub: "—", action: () => toast("قريباً") },
+        { icon: Download, label: "نسخة احتياطية", sub: busy ? "جارٍ..." : "تصدير JSON", action: handleBackup },
+        { icon: Upload, label: "استيراد نسخة", sub: "استعادة من ملف", action: () => fileInputRef.current?.click() },
         { icon: Database, label: "مسح ذاكرة التخزين", sub: "—", action: () => { localStorage.clear(); toast.success("تم المسح"); } },
       ]
     },
@@ -138,6 +187,14 @@ export function SettingsScreen() {
           ميزان العدالة v2.1.0 — صُنع بإتقان
         </motion.p>
       </motion.div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        onChange={handleRestore}
+        className="hidden"
+      />
 
       {/* Logout Confirm */}
       <AnimatePresence>

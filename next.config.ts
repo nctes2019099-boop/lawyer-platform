@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   typescript: { ignoreBuildErrors: false },
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
+  // Allow the Arena preview proxy to load dev resources (chunks/HMR) without
+  // triggering Next 16's cross-origin protection. Accepts the specific host
+  // and any *.e2b.app preview subdomain.
+  allowedDevOrigins: [
+    "3000-itwlxlr0ku76ww8ocjbi6.e2b.app",
+    "*.e2b.app",
+  ],
 };
 
 export default nextConfig;
