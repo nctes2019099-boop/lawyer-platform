@@ -33,6 +33,9 @@ export const env = {
   SMTP_FROM: process.env.SMTP_FROM || "Mizan <no-reply@mizan.app>",
   CONTACT_EMAIL: process.env.CONTACT_EMAIL || "support@mizan.app",
   RESEND_API_KEY: process.env.RESEND_API_KEY,
+  // Canonical base URL used to build links in transactional emails.
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "",
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || "",
   UPLOAD_DIR: process.env.UPLOAD_DIR,
   MAX_UPLOAD_MB: process.env.MAX_UPLOAD_MB || "20",
 } as const;

@@ -4,6 +4,7 @@ import { SignJWT } from "jose";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { rateLimitIP, getClientIP } from "@/lib/rate-limit";
+import { sendEmail, passwordResetEmail } from "@/lib/email";
 
 const schema = z.object({ email: z.string().email() });
 
@@ -39,11 +40,23 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // In development, surface the token for testing. Do NOT do this in production.
+      const base =
+        env.NEXTAUTH_URL ||
+        env.NEXT_PUBLIC_SITE_URL ||
+        "http://localhost:3000";
+      const resetUrl = `${base.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+
       if (!env.isProduction) {
         // eslint-disable-next-line no-console
-        console.log(`[dev] Password reset token for ${email}: ${token}`);
+        console.log(`[dev] Password reset link for ${email}: ${resetUrl}`);
       }
+
+      // Best-effort; never block the generic response on email failure so we
+      // don't leak account existence or bounce the request.
+      void sendEmail({
+        to: user.email,
+        ...passwordResetEmail({ name: user.name || "مستخدم", resetUrl }),
+      });
     }
 
     // Generic response regardless of whether the user exists.

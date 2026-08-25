@@ -20,24 +20,30 @@ export async function GET(
   const user = await getCurrentUser();
   if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-  const { name } = await params;
-  try {
-    const filePath = resolveStored(name);
-    const data = await fs.readFile(filePath);
-    const ext = name.split(".").pop()?.toLowerCase() || "";
-    const mime = MIME[ext] || "application/octet-stream";
-    const download = new URL(req.url).searchParams.get("download") === "1";
+    const { name } = await params;
+    try {
+      const filePath = resolveStored(name);
+      const data = await fs.readFile(filePath);
+      const ext = name.split(".").pop()?.toLowerCase() || "";
+      const isSvg = ext === "svg";
+      // SVG must never render inline in the app origin (stored XSS).
+      const mime = isSvg ? "application/octet-stream" : MIME[ext] || "application/octet-stream";
+      const forceDownload = isSvg || new URL(req.url).searchParams.get("download") === "1";
 
-    return new NextResponse(data, {
-      status: 200,
-      headers: {
-        "Content-Type": mime,
-        "Content-Length": String(data.length),
-        "Cache-Control": "private, max-age=3600",
-        ...(download ? { "Content-Disposition": `attachment; filename="${encodeURIComponent(name)}"` } : {}),
-      },
-    });
-  } catch {
+      return new NextResponse(data, {
+        status: 200,
+        headers: {
+          "Content-Type": mime,
+          "Content-Length": String(data.length),
+          "Cache-Control": "private, max-age=3600",
+          "X-Content-Type-Options": "nosniff",
+          "Content-Security-Policy": "default-src 'none'; sandbox",
+          ...(forceDownload
+            ? { "Content-Disposition": `attachment; filename="${encodeURIComponent(name)}"` }
+            : {}),
+        },
+      });
+    } catch {
     return new NextResponse("Not found", { status: 404 });
   }
 }

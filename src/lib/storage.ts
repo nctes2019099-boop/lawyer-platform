@@ -27,6 +27,11 @@ const ALLOWED = new Set([
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "text/plain",
+  "image/svg+xml",
+  "image/bmp",
+  "image/tiff",
+  "image/avif",
+  "image/heic",
 ]);
 
 const EXT_BY_MIME: Record<string, string> = {
@@ -40,6 +45,11 @@ const EXT_BY_MIME: Record<string, string> = {
   "application/vnd.ms-excel": "xls",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
   "text/plain": "txt",
+  "image/svg+xml": "svg",
+  "image/bmp": "bmp",
+  "image/tiff": "tiff",
+  "image/avif": "avif",
+  "image/heic": "heic",
 };
 
 export interface SavedFile {
@@ -75,7 +85,12 @@ export async function saveUploadedFile(file: File, ownerHint: string): Promise<S
 
   const dir = uploadDir();
   await fs.mkdir(dir, { recursive: true });
-  const bytes = Buffer.from(await file.arrayBuffer());
+  let bytes = Buffer.from(await file.arrayBuffer());
+  // Defense-in-depth: SVG can carry scripts. Strip executable constructs even
+  // though the serving route forces them to download in a sandboxed response.
+  if (mime === "image/svg+xml") {
+    bytes = Buffer.from(sanitizeSvg(bytes.toString("utf8")), "utf8");
+  }
   await fs.writeFile(path.join(dir, stored), bytes);
 
   return {
@@ -86,6 +101,29 @@ export async function saveUploadedFile(file: File, ownerHint: string): Promise<S
     fileExt: ext,
     mime,
   };
+}
+
+/**
+ * Best-effort removal of executable content from an SVG document. This is not a
+ * full HTML sanitizer, but combined with forced-download + sandbox CSP on read
+ * it neutralizes the common stored-XSS vectors (scripts, on* handlers,
+ * javascript: URLs, foreignObject-embedded HTML).
+ */
+function sanitizeSvg(svg: string): string {
+  let out = svg;
+  // Remove <script>...</script> blocks (case-insensitive, incl. attributes).
+  out = out.replace(/<script\b[\s\S]*?<\/script\s*>/gi, "");
+  out = out.replace(/<script\b[^>]*\/?>/gi, "");
+  // Remove foreignObject (can embed arbitrary HTML).
+  out = out.replace(/<foreignObject\b[\s\S]*?<\/foreignObject\s*>/gi, "");
+  // Strip on* event handlers.
+  out = out.replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "");
+  out = out.replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "");
+  // Neutralize javascript: and data:html URLs.
+  out = out.replace(/javascript:\s*/gi, "");
+  out = out.replace(/data:text\/html/gi, "");
+  return out;
 }
 
 function guessExt(name: string): string {

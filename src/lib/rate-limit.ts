@@ -39,6 +39,32 @@ export function rateLimitIP(ip: string, limit = 100, windowMs = 60000) {
   return rateLimit(`ip:${ip}`, limit, windowMs);
 }
 
+// ── Failed-login / account lockout (per email + per IP) ────────────────────
+const failedLogins = new Map<string, number[]>();
+
+function recentFailures(key: string, windowMs: number) {
+  const now = Date.now();
+  const recent = (failedLogins.get(key) || []).filter((t) => t > now - windowMs);
+  failedLogins.set(key, recent);
+  return recent;
+}
+
+export function isLockedOut(key: string, maxAttempts = 5, windowMs = 15 * 60_000): boolean {
+  return recentFailures(key, windowMs).length >= maxAttempts;
+}
+
+export function recordFailedLogin(key: string, maxAttempts = 5, windowMs = 15 * 60_000): boolean {
+  const recent = recentFailures(key, windowMs);
+  if (recent.length >= maxAttempts) return false;
+  recent.push(Date.now());
+  failedLogins.set(key, recent);
+  return true;
+}
+
+export function clearFailedLogins(key: string) {
+  failedLogins.delete(key);
+}
+
 /**
  * Best-effort extraction of the client IP from request headers.
  * Falls back to "unknown" when no identifying header is present.

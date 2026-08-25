@@ -105,3 +105,20 @@ export function paymentReceiptEmail(params: {
   const text = `تم استلام دفعتك لخطة ${params.planName} بمبلغ ${params.amount}. رقم العملية: ${params.transactionId}`;
   return { subject, html, text };
 }
+
+export function passwordResetEmail(params: {
+  name: string; resetUrl: string;
+}): { subject: string; html: string; text: string } {
+  const subject = "إعادة تعيين كلمة المرور — ميزان";
+  const html = shell(subject, `
+    <h2 style="margin:0 0 8px">إعادة تعيين كلمة المرور</h2>
+    <p style="color:#475569;font-size:14px;line-height:1.7">مرحباً ${params.name}،</p>
+    <p style="color:#475569;font-size:14px;line-height:1.7">تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك. اضغط الزر أدناه لاختيار كلمة مرور جديدة (الرابط صالح لمدة ساعة واحدة):</p>
+    <a href="${params.resetUrl}" style="display:inline-block;margin:16px 0;background:#10b981;color:#fff;text-decoration:none;padding:12px 28px;border-radius:12px;font-weight:700;font-size:14px">إعادة تعيين كلمة المرور</a>
+    <p style="color:#94a3b8;font-size:12px;line-height:1.7">إذا لم تطلب ذلك، يمكنك تجاهل هذا البريد وستبقى كلمة مرورك كما هي.</p>
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0">
+    <p style="color:#94a3b8;font-size:11px;word-break:break-all" dir="ltr">${params.resetUrl}</p>
+  `);
+  const text = `إعادة تعيين كلمة المرور في ميزان: افتح الرابط التالي خلال ساعة: ${params.resetUrl}`;
+  return { subject, html, text };
+}
