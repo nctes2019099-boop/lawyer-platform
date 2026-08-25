@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "postinstall": "prisma generate --no-engine || true; node scripts/patch-prisma-wasm.mjs || true",
+    "postinstall": "node scripts/setup-prisma-offline.mjs || true",
     "db:setup": "node scripts/init-db-sqlite.mjs && npm run db:seed",
     "build:mobile": "node scripts/build-mobile.mjs",
     "start": "next start",
