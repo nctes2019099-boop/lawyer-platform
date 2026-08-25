@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { getPagination } from "@/lib/pagination";
+import { checkQuota } from "@/lib/quotas";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -22,7 +24,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const { limit } = getPagination(req, { defaultLimit: 50, maxLimit: 200 });
   const category = searchParams.get("category");
   const search = searchParams.get("search");
   const thisMonth = searchParams.get("thisMonth");
@@ -66,6 +68,14 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = createSchema.parse(body);
+
+    // Enforce plan quota on number of clients.
+    const clientCount = await prisma.client.count({ where: { ownerId: user.id } });
+    const quota = await checkQuota(user.id, "maxClients", clientCount, { isAdmin: user.isAdmin });
+    if (!quota.allowed) {
+      return NextResponse.json({ error: quota.message, upgradeRequired: true }, { status: 402 });
+    }
+
     const client = await prisma.client.create({
       data: { ...data, ownerId: user.id },
     });

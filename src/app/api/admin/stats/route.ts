@@ -6,12 +6,13 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user?.isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [totalUsers, totalPayments, totalSubscriptions, totalCases] = await Promise.all([
+  const [totalUsers, totalPayments, totalSubscriptions, totalCases, revenueAgg] = await Promise.all([
     prisma.user.count(),
     prisma.payment.count(),
     prisma.subscription.count(),
     prisma.case.count(),
+    prisma.payment.aggregate({ _sum: { amount: true }, where: { status: "COMPLETED" } }),
   ]);
 
-  return NextResponse.json({ totalUsers, totalPayments, totalSubscriptions, totalCases });
+  return NextResponse.json({ totalUsers, totalPayments, totalSubscriptions, totalCases, revenue: revenueAgg._sum.amount || 0 });
 }

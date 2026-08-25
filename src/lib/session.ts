@@ -1,20 +1,24 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "./db";
-import { env } from "./env";
+import { env, assertProductionSecret } from "./env";
 
 const secret = new TextEncoder().encode(env.NEXTAUTH_SECRET);
+const COOKIE_NAME = "session";
 
 export async function createSession(userId: string) {
+  assertProductionSecret();
   const token = await new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
     .setExpirationTime("30d")
     .sign(secret);
 
   const cookieStore = await cookies();
-  cookieStore.set("session", token, {
+  cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: false,
+    // Secure cookies in production; HTTP is acceptable for local dev.
+    secure: env.isProduction,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 30,
     path: "/",
@@ -24,10 +28,11 @@ export async function createSession(userId: string) {
 }
 
 export async function verifySession() {
+  assertProductionSecret();
   const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
+  const token = cookieStore.get(COOKIE_NAME)?.value;
 
-  // Auto-login for development mode (no token needed)
+  // Auto-login for local development ONLY. Forcibly disabled in production via env.
   if (env.DEV_AUTO_LOGIN) {
     const user = await prisma.user.findFirst({
       where: { email: "demo@lawyer.com" },
@@ -35,18 +40,12 @@ export async function verifySession() {
     if (user) return { userId: user.id, user };
   }
 
-  if (!token) {
-    const headerUserId = (await cookies()).get("x-user-id")?.value;
-    if (headerUserId) {
-      const user = await prisma.user.findUnique({ where: { id: headerUserId } });
-      if (user) return { userId: user.id, user };
-    }
-    return null;
-  }
+  if (!token) return null;
 
   try {
     const { payload } = await jwtVerify(token, secret, { clockTolerance: 60 });
     const userId = payload.userId as string;
+    if (!userId) return null;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return null;
     return { userId, user };
@@ -62,5 +61,5 @@ export async function getCurrentUser() {
 
 export async function destroySession() {
   const cookieStore = await cookies();
-  cookieStore.delete("session");
+  cookieStore.delete(COOKIE_NAME);
 }

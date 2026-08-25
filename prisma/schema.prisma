@@ -34,6 +34,18 @@ model User {
   auditLogs     AuditLog[]
   tasks         Task[]
   timeEntries   TimeEntry[]
+  resetTokens   PasswordResetToken[]
+  reminders     Reminder[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model Case {
@@ -320,4 +332,31 @@ model TimeEntry {
   @@index([ownerId])
   @@index([caseId])
   @@index([startTime])
+}
+model DocumentAccess {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  documentId  String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+}
+
+model Reminder {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  dueAt       DateTime
+  status      String    @default("pending")
+  type        String    @default("general")
+  caseId      String?
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([ownerId])
+  @@index([dueAt])
+  @@index([status])
 }

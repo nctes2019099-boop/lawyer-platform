@@ -2,17 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { userOwnsResources } from "@/lib/authorization";
+import { getPagination } from "@/lib/pagination";
+import { checkQuota } from "@/lib/quotas";
 import { z } from "zod";
 
 const createSchema = z.object({
-  caseNumber: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().optional(),
+  caseNumber: z.string().min(1).max(100),
+  title: z.string().min(1).max(200),
+  description: z.string().max(5000).optional(),
   type: z.string().default("مدني"),
   status: z.string().default("قيد النظر"),
   priority: z.string().default("عادية"),
-  court: z.string().optional(),
-  judge: z.string().optional(),
+  court: z.string().max(200).optional(),
+  judge: z.string().max(200).optional(),
   clientId: z.string().optional(),
 });
 
@@ -24,7 +27,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const { limit } = getPagination(req, { defaultLimit: 50, maxLimit: 200 });
   const status = searchParams.get("status");
   const type = searchParams.get("type");
   const search = searchParams.get("search");
@@ -59,6 +62,17 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = createSchema.parse(body);
+
+    if (!(await userOwnsResources(user.id, { clientId: data.clientId }))) {
+      return NextResponse.json({ error: "Invalid client" }, { status: 400 });
+    }
+
+    // Enforce plan quota on number of cases.
+    const caseCount = await prisma.case.count({ where: { ownerId: user.id } });
+    const quota = await checkQuota(user.id, "maxCases", caseCount, { isAdmin: user.isAdmin });
+    if (!quota.allowed) {
+      return NextResponse.json({ error: quota.message, upgradeRequired: true }, { status: 402 });
+    }
 
     const case_ = await prisma.case.create({
       data: { ...data, ownerId: user.id },

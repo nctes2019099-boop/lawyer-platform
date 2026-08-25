@@ -25,6 +25,7 @@ describe("cn", () => {
     expect(cn("a", "b")).toBe("a b");
   });
   it("handles conditional classes", () => {
-    expect(cn("a", false && "b", "c")).toBe("a c");
+    const showB = false;
+    expect(cn("a", showB && "b", "c")).toBe("a c");
   });
 });

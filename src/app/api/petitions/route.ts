@@ -4,8 +4,10 @@ import { getCurrentUser } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
+import { userOwnsResources } from "@/lib/authorization";
+
 const createSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).max(200),
   content: z.string().min(1),
   type: z.string().default("عريضة"),
   status: z.string().default("قيد التنفيذ"),
@@ -44,6 +46,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = createSchema.parse(body);
+
+    if (!(await userOwnsResources(user.id, { caseId: data.caseId }))) {
+      return NextResponse.json({ error: "Invalid case" }, { status: 400 });
+    }
+
     const petition = await prisma.petition.create({
       data: { ...data, ownerId: user.id },
       include: { case: true },

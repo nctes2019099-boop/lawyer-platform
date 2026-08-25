@@ -18,18 +18,21 @@ export type ScreenName =
   | "transactions"
   | "tasks"
   | "admin"
-  | "login";
+  | "login"
+  | "register";
 
 interface AppState {
   currentScreen: ScreenName;
   previousScreen: ScreenName | null;
   sidebarOpen: boolean;
   searchOpen: boolean;
+  notificationsOpen: boolean;
   darkMode: boolean;
   language: "ar" | "en";
   selectedCaseId: string | null;
   selectedClientId: string | null;
   selectedNoteId: string | null;
+  selectedAppointmentId: string | null;
   dialogOpen: string | null;
   dialogData: Record<string, unknown> | null;
   _lastSheetCloseTime: number;
@@ -38,6 +41,7 @@ interface AppState {
   goBack: () => void;
   setSidebarOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
+  setNotificationsOpen: (open: boolean) => void;
   setDarkMode: (dark: boolean) => void;
   setLanguage: (lang: "ar" | "en") => void;
   setDialogOpen: (dialog: string | null, data?: Record<string, unknown>) => void;
@@ -48,11 +52,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   previousScreen: null,
   sidebarOpen: false,
   searchOpen: false,
+  notificationsOpen: false,
   darkMode: false,
   language: "ar",
   selectedCaseId: null,
   selectedClientId: null,
   selectedNoteId: null,
+  selectedAppointmentId: null,
   dialogOpen: null,
   dialogData: null,
   _lastSheetCloseTime: 0,
@@ -62,10 +68,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       previousScreen: state.currentScreen,
       currentScreen: screen,
-      selectedCaseId: (params?.caseId as string) || state.selectedCaseId,
-      selectedClientId: (params?.clientId as string) || state.selectedClientId,
-      selectedNoteId: (params?.noteId as string) || state.selectedNoteId,
-      dialogOpen: (params?.openAdd as boolean) ? "add" : state.dialogOpen,
+      selectedCaseId: (params?.caseId as string) ?? state.selectedCaseId,
+      selectedClientId: (params?.clientId as string) ?? state.selectedClientId,
+      selectedNoteId: (params?.noteId as string) ?? state.selectedNoteId,
+      selectedAppointmentId: (params?.appointmentId as string) ?? state.selectedAppointmentId,
+      dialogOpen: (params?.openAdd as boolean) ? "add" : null,
       dialogData: params,
     });
   },
@@ -94,6 +101,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }
     set({ searchOpen: open });
+  },
+
+  setNotificationsOpen: (open) => {
+    if (!open) set({ _lastSheetCloseTime: Date.now() });
+    set({ notificationsOpen: open });
   },
 
   setDarkMode: (dark) => set({ darkMode: dark }),

@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma as _prisma } from "../src/lib/db";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const prisma = _prisma;
 
 async function main() {
   console.log("🌱 Starting seed...");
@@ -230,6 +230,31 @@ async function main() {
   });
 
   console.log("✅ Plans:", 4);
+
+  // Grant the demo lawyer the annual (effectively unlimited) plan so seeded
+  // data and new records never hit the free-tier quota. Admins are exempt by
+  // role in checkQuota, but we also give the demo an active ACTIVE subscription.
+  const annualPlan = await prisma.subscriptionPlan.findFirst({ where: { name: "سنوي" } });
+  const freePlan = await prisma.subscriptionPlan.findFirst({ where: { price: 0 } });
+  const subNow = new Date();
+  const subEnd = new Date(subNow.getTime() + 365 * 86400000);
+  if (annualPlan) {
+    await prisma.subscription.upsert({
+      where: { userId: demoUser.id },
+      update: { planId: annualPlan.id, status: "ACTIVE", startDate: subNow, endDate: subEnd, autoRenew: true },
+      create: { userId: demoUser.id, planId: annualPlan.id, status: "ACTIVE", startDate: subNow, endDate: subEnd, autoRenew: true },
+    });
+  }
+  if (freePlan) {
+    for (const u of [admin]) {
+      await prisma.subscription.upsert({
+        where: { userId: u.id },
+        update: { planId: freePlan.id, status: "ACTIVE", startDate: subNow, endDate: new Date(subNow.getTime() + 30 * 86400000), autoRenew: false },
+        create: { userId: u.id, planId: freePlan.id, status: "ACTIVE", startDate: subNow, endDate: new Date(subNow.getTime() + 30 * 86400000), autoRenew: false },
+      });
+    }
+  }
+  console.log("✅ Subscriptions: demo=سنوي (unlimited), admin=مجاني (exempt)");
 
   await prisma.transaction.createMany({
     data: [
