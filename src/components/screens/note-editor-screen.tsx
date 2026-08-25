@@ -112,8 +112,38 @@ export function NoteEditorScreen() {
 
   /* ===== مسار الخادم: تسجيل صوتي ثم إرساله للمزود ===== */
   const startServerRecording = async () => {
+    // تحقق مسبق من وجود واجهة الميكروفون (غالباً تتعطل داخل iframe).
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      const inIframe = typeof window !== "undefined" && window.self !== window.top;
+      toast.error(
+        inIframe
+          ? "الميكروفون غير متاح داخل نافذة المعاينة. افتح التطبيق في تبويب مستقل."
+          : "المتصفح لا يدعم تسجيل الصوت أو الميكروفون غير متاح.",
+        { duration: 5000 }
+      );
+      return;
+    }
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      const name = err instanceof DOMException ? err.name : "";
+      const inIframe = typeof window !== "undefined" && window.self !== window.top;
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        toast.error(
+          inIframe
+            ? "المعاينة داخل نافذة ولا تملك صلاحية المايك. افتح التطبيق في تبويب مستقل أو اسمح بالمايك من إعدادات المتصفح."
+            : "اسمح بالميكروفون من إعدادات المتصفح لهذا الموقع.",
+          { duration: 6000 }
+        );
+      } else if (name === "NotFoundError") {
+        toast.error("لم يتم العثور على جهاز ميكروفون.");
+      } else {
+        toast.error("تعذّر الوصول إلى الميكروفون.");
+      }
+      return;
+    }
+    try {
       const mr = new MediaRecorder(stream);
       chunksRef.current = [];
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };

@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     // Enforce plan quota on number of cases.
     const caseCount = await prisma.case.count({ where: { ownerId: user.id } });
-    const quota = await checkQuota(user.id, "maxCases", caseCount);
+    const quota = await checkQuota(user.id, "maxCases", caseCount, { isAdmin: user.isAdmin });
     if (!quota.allowed) {
       return NextResponse.json({ error: quota.message, upgradeRequired: true }, { status: 402 });
     }

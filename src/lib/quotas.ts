@@ -77,8 +77,14 @@ export interface QuotaCheck {
 export async function checkQuota(
   userId: string,
   key: QuotaKey,
-  currentCount: number
+  currentCount: number,
+  opts?: { isAdmin?: boolean }
 ): Promise<QuotaCheck> {
+  // Administrators are never constrained by plan quotas (they manage the
+  // platform). This also keeps seeded demo data usable.
+  if (opts?.isAdmin) {
+    return { allowed: true, current: currentCount };
+  }
   const limits = await getUserLimits(userId);
   const map: Record<QuotaKey, string[]> = {
     maxCases: ["maxCases", "cases"],
